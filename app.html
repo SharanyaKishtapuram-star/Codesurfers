@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BloodLink — Connect Donors & Hospitals</title>
+  <style>
+    /* Reset & base */
+    :root{ --accent:#c62828; --muted:#666; --bg:#f7f7f8; --card:#fff; --glass: rgba(255,255,255,0.6)}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial,sans-serif;margin:0;background:linear-gradient(180deg,#fff 0%, #f6f7f9 100%);color:#222}
+    a{color:inherit;text-decoration:none}
+
+    /* Header / Nav */
+    header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--card);position:sticky;top:0;z-index:20;border-bottom:1px solid #eee}
+    .brand{display:flex;gap:12px;align-items:center}
+    .logo{width:44px;height:44px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#e53935);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    nav{display:flex;gap:8px;align-items:center}
+    nav a{padding:8px 12px;border-radius:8px;font-weight:600;color:var(--muted)}
+    nav a.active{background:var(--glass);color:var(--accent);box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+    .cta{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;font-weight:700}
+
+    /* Layout */
+    .container{max-width:1100px;margin:28px auto;padding:0 18px}
+    .hero{display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center}
+    .card{background:var(--card);border-radius:12px;padding:18px;box-shadow:0 6px 18px rgba(20,20,30,0.04)}
+    h1{margin:0 0 8px;font-size:28px}
+    p.lead{margin:0;color:var(--muted)}
+
+    /* Forms & lists */
+    form{display:grid;gap:10px}
+    label{font-weight:600;font-size:13px}
+    input,select,textarea{padding:10px;border-radius:8px;border:1px solid #e6e6e9;font-size:14px}
+    .row{display:flex;gap:10px}
+    .row > *{flex:1}
+    button{padding:10px 12px;border-radius:8px;border:0;font-weight:700;cursor:pointer}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-muted{background:#eef0f2;color:#333}
+
+    /* List styles */
+    .list{display:grid;gap:10px}
+    .item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;border:1px solid #f0f0f0}
+    .meta{color:var(--muted);font-size:13px}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr}
+      nav{display:none}
+      .hamb{display:block}
+    }
+
+    /* Sections toggled by JS */
+    section{display:none}
+    section.active{display:block}
+
+    /* footer */
+    footer{max-width:1100px;margin:28px auto 80px;padding:18px;color:var(--muted);text-align:center}
+
+    /* small helpers */
+    .search{display:flex;gap:8px}
+    .chip{padding:6px 8px;border-radius:999px;border:1px solid #eee;font-size:13px}
+  </style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">BL</div>
+    <div>
+      <div style="font-weight:800">BloodLink</div>
+      <div style="font-size:12px;color:var(--muted)">Connect donors • hospitals • emergencies</div>
+    </div>
+  </div>
+  <nav aria-label="Main navigation">
+    <a href="#" data-target="home" class="active">Home</a>
+    <a href="#" data-target="donors">Donors</a>
+    <a href="#" data-target="hospitals">Hospitals</a>
+    <a href="#" data-target="register">Register</a>
+    <a href="#" data-target="contact">Contact</a>
+  </nav>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="cta" id="emergencyBtn">EMERGENCY</button>
+    <button class="hamb" style="display:none">☰</button>
+  </div>
+</header>
+
+<main class="container">
+  <!-- HOME -->
+  <section id="home" class="active">
+    <div class="hero">
+      <div>
+        <div class="card">
+          <h1>Find blood donors near you — fast</h1>
+          <p class="lead">Search donors by blood group, city or availability. Hospitals can post requests and donors can register in seconds.</p>
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center;">
+            <input id="quickSearch" placeholder="Search blood group or city (e.g. A+, Hyderabad)" style="flex:1;padding:12px;border-radius:10px;border:1px solid #eee">
+            <button class="btn-primary" id="quickSearchBtn">Search</button>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap">
+            <div class="chip">A+</div>
+            <div class="chip">B+</div>
+            <div class="chip">O-</div>
+            <div class="chip">Emergency</div>
+          </div>
+        </div>
+
+        <div style="margin-top:16px" class="card">
+          <h3 style="margin:0 0 8px">Latest Requests</h3>
+          <div id="requestsList" class="list">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <h3 style="margin-top:0">Quick actions</h3>
+          <div style="display:grid;gap:8px">
+            <button class="btn-primary" id="postRequestBtn">Post urgent request</button>
+            <button class="btn-muted" id="findDonorBtn">Find donors</button>
+            <button class="btn-muted" id="registerBtn">I want to donate</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px" class="card">
+          <h4 style="margin:0 0 8px">How it works</h4>
+          <ol style="margin:0 0 0 16px;color:var(--muted)">
+            <li>Hospitals post blood requests</li>
+            <li>Donors register & set availability</li>
+            <li>Search by blood group & city</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DONORS -->
+  <section id="donors">
+    <div class="card">
+      <h2 style="margin-top:0">Donors</h2>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <div style="flex:1">
+          <input id="donorSearch" placeholder="Search donors by city or blood group" style="width:100%;padding:10px;border-radius:8px;border:1px solid #eee">
+        </div>
+        <select id="filterGroup">
+          <option value="">All groups</option>
+          <option>A+</option>
+          <option>A-</option>
+          <option>B+</option>
+          <option>B-</option>
+          <option>O+</option>
+          <option>O-</option>
+          <option>AB+</option>
+          <option>AB-</option>
+        </select>
+      </div>
+
+      <div id="donorList" class="list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- HOSPITALS -->
+  <section id="hospitals">
+    <div class="card">
+      <h2 style="margin-top:0">Hospitals & Requests</h2>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px">
+        <input id="hospitalSearch" placeholder="Search hospitals or city" style="flex:1;padding:10px;border-radius:8px;border:1px solid #eee">
+        <button id="newRequestBtn" class="btn-primary">New Request</button>
+      </div>
+      <div id="hospitalList" class="list"></div>
+    </div>
+  </section>
+
+  <!-- REGISTER -->
+  <section id="register">
+    <div class="card">
+      <h2 style="margin-top:0">Register as a Donor or Hospital</h2>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+        <div>
+          <h3>Donor Registration</h3>
+          <form id="donorForm">
+            <label>Name</label>
+            <input id="d_name" required>
+            <label>Phone</label>
+            <input id="d_phone" required>
+            <div class="row">
+              <div>
+                <label>Blood Group</label>
+                <select id="d_group" required>
+                  <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+                  <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+                </select>
+              </div>
+              <div>
+                <label>City</label>
+                <input id="d_city" required>
+              </div>
+            </div>
+            <label>Availability</label>
+            <select id="d_avail"><option>Available</option><option>Unavailable</option></select>
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button type="submit" class="btn-primary">Save Donor</button>
+              <button type="button" id="clearDonors" class="btn-muted">Clear All</button>
+            </div>
+          </form>
+        </div>
+
+        <div>
+          <h3>Hospital / Request</h3>
+          <form id="hospitalForm">
+            <label>Hospital Name</label>
+            <input id="h_name" required>
+            <label>Contact Person / Phone</label>
+            <input id="h_phone" required>
+            <label>City</label>
+            <input id="h_city" required>
+            <label>Blood Group Needed</label>
+            <select id="h_group">
+              <option>A+</option><option>A-</option><option>B+</option><option>B-</option>
+              <option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
+            </select>
+            <label>Units Needed</label>
+            <input id="h_units" type="number" value="1" min="1">
+            <div style="display:flex;gap:8px;margin-top:8px">
+              <button class="btn-primary" type="submit">Post Request</button>
+              <button type="button" id="clearHospitals" class="btn-muted">Clear All</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="card">
+      <h2 style="margin-top:0">Contact & About</h2>
+      <p class="lead">BloodLink is a demo project. For production you'll need verification flows, GDPR/consent, mobile apps, and secure APIs.</p>
+      <h4>Developers</h4>
+      <p class="meta">This template includes: client-side storage, searchable lists, request posting, and a simple SPA navigation using vanilla JS.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  © BloodLink — Demo • Built with HTML/CSS/JS
+</footer>
+
+<script>
+// --- Simple SPA navigation ---
+const navLinks = document.querySelectorAll('nav a');
+const sections = document.querySelectorAll('main section');
+function showSection(id){
+  sections.forEach(s=>s.id===id? s.classList.add('active'): s.classList.remove('active'));
+  navLinks.forEach(a=> a.dataset.target===id? a.classList.add('active'): a.classList.remove('active'));
+}
+navLinks.forEach(a=> a.addEventListener('click', e=>{e.preventDefault(); showSection(a.dataset.target)}));
+
+// --- Storage keys ---
+const DONORS_KEY = 'bloodlink_donors_v1';
+const HOSP_KEY = 'bloodlink_hosp_v1';
+const REQ_KEY = 'bloodlink_reqs_v1';
+
+// --- Utils ---
+function uid(){return Math.random().toString(36).slice(2,9)}
+function read(key){try{return JSON.parse(localStorage.getItem(key)||'[]')}catch(e){return []}}
+function write(key,val){localStorage.setItem(key,JSON.stringify(val))}
+
+// --- Renderers ---
+function renderDonors(filter=""){const list=read(DONORS_KEY);const out=document.getElementById('donorList');out.innerHTML='';
+  const q = (filter||'').toLowerCase();
+  list.filter(d=>{
+    if(!q) return true;
+    return (d.name+d.city+d.group).toLowerCase().includes(q);
+  }).forEach(d=>{
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML = `<div>
+      <div style="font-weight:700">${d.name} <span style="font-size:13px;color:var(--muted);font-weight:600">• ${d.group}</span></div>
+      <div class="meta">${d.city} • ${d.phone} • ${d.avail}</div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn-primary" onclick="contactDonor('${d.phone}')">Contact</button>
+    </div>`;
+    out.appendChild(el);
+  });
+}
+
+function renderHospitals(q=''){const list=read(HOSP_KEY);const out=document.getElementById('hospitalList');out.innerHTML='';
+  const qq=(q||'').toLowerCase();
+  list.filter(h=> !qq || (h.name+h.city+h.contact).toLowerCase().includes(qq)).forEach(h=>{
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML = `<div>
+      <div style="font-weight:700">${h.name}</div>
+      <div class="meta">${h.city} • ${h.contact}</div>
+      <div class="meta">Last request: ${h.lastRequest||'—'}</div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn-muted" onclick="viewHospital('${h.id}')">View</button>
+    </div>`;
+    out.appendChild(el);
+  });
+}
+
+function renderRequests(){const list=read(REQ_KEY);const out=document.getElementById('requestsList');out.innerHTML='';
+  list.slice().reverse().forEach(r=>{
+    const el=document.createElement('div'); el.className='item';
+    el.innerHTML = `<div>
+      <div style="font-weight:700">${r.group} needed • ${r.units} unit(s)</div>
+      <div class="meta">${r.hospital} • ${r.city} • ${r.contact}</div>
+      <div class="meta">Posted: ${new Date(r.posted).toLocaleString()}</div>
+    </div>
+    <div style="text-align:right">
+      <button class="btn-primary" onclick="alert('Notify donors in ${r.city} for ${r.group} — demo only')">Notify</button>
+    </div>`;
+    out.appendChild(el);
+  });
+}
+
+// --- Actions ---
+function contactDonor(phone){
+  // In real app you'd open messaging / call. Here we copy phone.
+  navigator.clipboard?.writeText(phone).then(()=>alert('Phone copied: '+phone)).catch(()=>alert('Phone: '+phone));
+}
+function viewHospital(id){
+  const h = read(HOSP_KEY).find(x=>x.id===id); if(!h) return alert('Not found');
+  alert(`${h.name}\nCity: ${h.city}\nContact: ${h.contact}\nLast: ${h.lastRequest||'—'}`);
+}
+
+// --- Forms ---
+const donorForm = document.getElementById('donorForm');
+donorForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const d = {id:uid(), name:dom('d_name').value.trim(), phone:dom('d_phone').value.trim(), group:dom('d_group').value, city:dom('d_city').value.trim(), avail:dom('d_avail').value};
+  if(!d.name||!d.phone) return alert('Please fill required');
+  const list = read(DONORS_KEY); list.push(d); write(DONORS_KEY,list); renderDonors(); donorForm.reset(); alert('Donor saved')
+});
+
+const hospitalForm = document.getElementById('hospitalForm');
+hospitalForm.addEventListener('submit', e=>{
+  e.preventDefault();
+  const h = {id:uid(), name:dom('h_name').value.trim(), contact:dom('h_phone').value.trim(), city:dom('h_city').value.trim(), lastRequest: null};
+  const req = {id:uid(), hospital:h.name, contact:h.contact, city:h.city, group:dom('h_group').value, units:dom('h_units').value||1, posted: Date.now()};
+  const hs = read(HOSP_KEY); hs.push(h); write(HOSP_KEY,hs);
+  const rs = read(REQ_KEY); rs.push(req); write(REQ_KEY,rs);
+  renderHospitals(); renderRequests(); hospitalForm.reset(); alert('Request posted')
+});
+
+document.getElementById('clearDonors').addEventListener('click', ()=>{if(confirm('Clear all donors?')){write(DONORS_KEY,[]);renderDonors()}});
+document.getElementById('clearHospitals').addEventListener('click', ()=>{if(confirm('Clear hospitals?')){write(HOSP_KEY,[]);write(REQ_KEY,[]);renderHospitals();renderRequests()}});
+
+// --- Helpers & bindings ---
+function dom(id){return document.getElementById(id)}
+renderDonors(); renderHospitals(); renderRequests();
+
+document.getElementById('donorSearch').addEventListener('input', e=>renderDonors(e.target.value));
+document.getElementById('filterGroup').addEventListener('change', e=>renderDonors(e.target.value));
+document.getElementById('hospitalSearch').addEventListener('input', e=>renderHospitals(e.target.value));
+
+document.getElementById('quickSearchBtn').addEventListener('click', ()=>{const q=dom('quickSearch').value; showSection('donors'); renderDonors(q);});
+
+document.getElementById('postRequestBtn').addEventListener('click', ()=>{showSection('register'); document.getElementById('h_name').focus();});
+document.getElementById('findDonorBtn').addEventListener('click', ()=>{showSection('donors'); dom('donorSearch').focus();});
+document.getElementById('registerBtn').addEventListener('click', ()=>{showSection('register'); dom('d_name').focus();});
+
+// emergency button quick modal demo
+document.getElementById('emergencyBtn').addEventListener('click', ()=>{
+  const city = prompt('Your city for emergency broadcast (e.g. Hyderabad)');
+  if(!city) return;
+  alert('Emergency broadcast sent to donors in '+city+' — demo only');
+});
+
+// small accessibility: allow navigation by hash
+window.addEventListener('hashchange', ()=>{const id = location.hash.replace('#',''); if(id) showSection(id)});
+
+</script>
+</body>
+</html>
